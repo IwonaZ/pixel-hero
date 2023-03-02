@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download multiple pictures</title>
+</head>
+
+<body>
+
+    <h2>Select pictures you want to download</h2>
+    
+    <div><button type="button" id="SelectAll">Select All</button></div>
+    <div><button type="button" id="UnselectAll">Clear selection</button></div>
+
+
+{% csrf_token %}
+{% for picture in pictures %}
+<div id='picture-{{ picture.id }}'>
+    <img src="{{ picture.thumbnail.url }}">
+    <input type="checkbox" name="picture_id[]" value="{{ picture.id }}" id="download_picture">
+</div>
+
+    {% endfor %}
+
+
+<div><button type="submit" class="btn_download" id="download_btn"><a href="{{ picture.image.url }}" download>Download</a></button></div>
+
+<script>
+
+    // create a list of picture id's that should be downloaded
+    window.addEventListener('load', () => {
+
+        document.getElementById('SelectAll').onclick = function() {
+            event.preventDefault()
+            let checkboxes = Array.from(document.querySelectorAll('input[type=checkbox]'))
+            checkboxes.forEach((el) => {el.checked = true})
+        }
+
+        document.getElementById('UnselectAll').onclick = function() {
+            event.preventDefault()
+            let checkboxes = Array.from(document.querySelectorAll('input[type=checkbox]'))
+            checkboxes.forEach((el) => {el.checked = false})
+        }
+        document.querySelector('#download_btn').addEventListener('click', event => {
+            event.preventDefault()
+            if(confirm('Do you want to download those images?')){
+                const csrf=document.querySelector('input[name=csrfmiddlewaretoken').value
+                const ids = Array.from(document.querySelectorAll('input[type=checkbox]:checked'))
+                if(ids.length===0) {
+                    alert('Please select items to download')
+                } else {
+                    const data = new FormData()
+                    ids.forEach((el) => {
+                        data.append('id[]', el.value)
+                    })
+                    data.append('csrfmiddlewaretoken', csrf)
+                    fetch('.', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRFToken': csrf
+                        },
+                        credentials: 'same-origin',
+                        body: data
+                        
+                    }).then(
+                        response => response.json() //convert response to json
+                    ).then(
+                        json => downloadFiles(json.urls) // access key urls
+                        
+                    ).then(
+                        checkboxes = Array.from(document.querySelectorAll('input[type=checkbox]:checked')).forEach((el) => {el.checked = false}) // uncheck all boxes once downloaded
+                    )
+
+
+                }
+
+            }
+        })
+    })
+
+    function downloadFiles(urls) {
+        urls.forEach(url => {
+            const a = document.createElement('a')
+            a.href = url
+            a.target = '_parent'
+            // Use a.download as it prevents plugins from opening.
+            a.download = url.split('/').pop()
+            // Add a to the doc for click to work.
+            document.body.appendChild(a)
+            a.click()
+            // Delete the temporary link.
+            a.parentNode.removeChild(a)
+        })
+    }
+
+
+</script>
+
+
+</body>
+</html>

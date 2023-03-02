@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet' />
+  </head>
+
+  <body>
+    {% if lon_lat > 0%}
+    <div id='map' width="100%" style='height:400px'></div>
+    {% endif %}
+
+   <script>
+    mapboxgl.accessToken = "{{ mapbox_access_token }}";
+    var latitude = "{{ latitude }}"
+    var longitude = "{{ longitude }}"
+    var map = new mapboxgl.Map({
+     container: 'map',
+     style: 'mapbox://styles/mapbox/streets-v10',
+     center: [longitude, latitude],
+     zoom: 9
+    });
+
+    // Set marker
+    const marker = new mapboxgl.Marker()
+    .setLngLat([longitude, latitude])
+    .addTo(map);
+    
+   </script>
+  </body>
+</html>
